@@ -7,6 +7,7 @@
 
 import mx.collections.ArrayCollection;
 import mx.controls.Alert;
+import mx.managers.PopUpManager;
 import mx.rpc.AsyncToken;
 import mx.rpc.events.FaultEvent;
 import mx.rpc.events.ResultEvent;
@@ -25,7 +26,9 @@ public var mysql_db:String = "audioflasho";
 
 //Enter the url to the php file you placed on your MySQL webserver
 //LIVE
-public var mysql_url:String = "http://ec2-50-16-141-16.compute-1.amazonaws.com/flexsqlaudio.php"; 
+//public var mysql_url:String = "http://ec2-50-16-141-16.compute-1.amazonaws.com/flexsqlaudio.php"; 
+//http://23.21.77.1/
+public var mysql_url:String = "http://ec2-23-21-77-1.compute-1.amazonaws.com/flexsqlaudio.php"; 
 //DEV
 //public var mysql_url:String = "http://localhost:8888/flexmysqlconn.php"; 
 
@@ -49,14 +52,14 @@ public function mysqlQuery(sql:String,fid:String):void {
 	var http:HTTPService = new HTTPService;
 	var parm:Object = new Object;
 	
-	
+	//showBusyCursor="false"
 	
 	parm.fas_sql = sql;
 	parm.private_key = private_key;
 	parm.fas_db = mysql_db; 
 	http.url = mysql_url+"?irand="+Math.random();
 	
-	http.showBusyCursor = true;
+	http.showBusyCursor = false;
 	http.request = sql;
 	http.addEventListener(ResultEvent.RESULT, mysqlResult);
 	http.addEventListener(FaultEvent.FAULT, mysqlFault);
@@ -89,37 +92,41 @@ private function mysqlResult(event:ResultEvent):void{
 		
 		//Create a new case/break for each of your
 		//sql query statements
+		case "activeSlots":
+			
+			
+			
+			inUse = event.result.results.record;
+			
+			break;
+		
+		case "signIn":
+			takeIt(tempButton, tempSlott);
+			PopUpManager.removePopUp(panel);
+			break;
+		
+		case "slotName":
+			
+			break;
+		
+		case "startDB":
+			dbCheck = new Object;
+			
+			dbCheck = event.result.results.record;
+			
+			break;
 		case "takeslot":
 			//connectQuery();
 			break;
 		
 		case "slots":
-			dropDown.dataProvider = event.result.results.record;	
-			dropDown.labelField = "slot";	
+			//dropDown.dataProvider = event.result.results.record;	
+			//dropDown.labelField = "slot";	
 			//activeList.dataProvider = event.result.results.record;
 			//activeList.labelField = "slot";
 			
 			break;
-		case "activeSlots":
-			//trace('active slots');
-			//inUse = new ArrayCollection;
-			inUse = new Object;
-			//inUse = event.result.results.record as ArrayCollection;
-			//inUse.source = ArrayUtil.toArray(event.result.results.record);
-			//inUse.source = event.result.results.record;
-			inUse = event.result.results.record;
-			//trace('event result active ' +event.result.results.record);
-			//inUse.source = event.result.results.record as ArrayCollection;
-			//trace('IS IN USE NULL: ' +inUse);
-			//trace('activeSlotEventCount: ' + event.result.results.cnt); 
-			//trace('toString fail: ' + event.result.results.record);
-			//activeList.labelField = "slot";
-			//activeList.dataProvider = event.result.results.record;// as ArrayCollection;
-			//activeList.labelField = "active";
-			//trace('EVENT REZULTS');
-			//prompt2.text = arrayCollectionToString(inUse);
-			//Alert.show('ACTIVE SLOTS YO');
-			break;
+		
 		
 	}	
 }

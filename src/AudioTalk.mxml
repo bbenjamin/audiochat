@@ -8,10 +8,10 @@
 	height="340" width="900"
 	backgroundColor="gray"
 	backgroundAlpha="0"
-	creationComplete="createPopUp(event)"
+	creationComplete="chooseRole(event);activeSlots();"
 	>
 	<fx:Declarations>
-		
+		  
 	</fx:Declarations>
 	<fx:Script source="ActionScript/main.as"/>
 	<fx:Script source="ActionScript/fas_mysql.as"/>
@@ -24,88 +24,86 @@
 			import mx.containers.Panel;
 			import mx.containers.VBox;
 			import mx.controls.Alert;
-			import mx.controls.Label;
 			import mx.controls.Spacer;
 			import mx.managers.PopUpManager;
 			import mx.utils.Base64Encoder;
 			
+			import spark.components.Button;
 			import spark.components.DropDownList;
-			
-			public var timr:Timer = new Timer(8000);
+			import spark.components.Label;
+			import spark.components.TextInput;
+			public var username:String;
+			public var timr:Timer = new Timer(1000);
 			public var t1:Label;
 			private var timeLapse:uint = 0;
-			
+			public var loadin:Boolean = true;
 			public var picked:String;
-			private var panel:Panel;
+			public var panel:Panel;
 			//public var inUse:ArrayCollection;
 			public var inUse:Object;
+			
+			public var dbCheck:Object;
+			public var textInput:TextInput = new TextInput();
 			//private var timer2:Timer = new Timer(1000);
 			
 			public var dropDown:DropDownList = new DropDownList();
-			/*
-			private function handleActiveSlots(event:ResultEvent):void{
-			Alert.show("doyy");
-			//activeSlots.send();
-			}
-			private function faultHandler(event:FaultEvent):void{
-			Alert.show("WACK");
+			public var tempButton:Button;
+			public var tempSlott:String;
 			
-			}
-			private function authAndSend(service:HTTPService):void
-			{
-			var encoder:Base64Encoder = new Base64Encoder();
-			encoder.insertNewLines = false; // see below for why you need to do this
-			encoder.encode("dude:bro");
-			
-			service.headers = {Authorization:"Basic " + encoder.toString()};                                                
-			service.send();
-			}
-			*/
-			private function initPop():void {
-				var vb:VBox = new VBox();
-				var label:Label = new Label();
-				var textInput:TextInput = new TextInput();
-				
-				var cb:ControlBar = new ControlBar();
-				var s:Spacer = new Spacer();
-				var b1:Button = new Button();
-				var b2:Button = new Button();
-				
-				
-				s.percentWidth = 100;
-				
-				b1.label = "OK";
-				b1.addEventListener(MouseEvent.CLICK, chooseRole);
-				//b1.addEventListener(MouseEvent.CLICK, subscribe1);
-				b2.label = "Cancel";
-				b2.addEventListener(MouseEvent.CLICK, closePopUp);
-				
-				//cb.addChild(s);
-				//cb.addChild(b1);
-				//cb.addChild(b2);
-				
-				label.text = "Chat Slot or Viewer";
-				slots();
-				//dropDown.dataProvider = userChoices;
-				//dropDown.labelField = "ddlLabel";
-				vb.setStyle("paddingBottom", 5);
-				vb.setStyle("paddingLeft", 5);
-				vb.setStyle("paddingRight", 5);
-				vb.setStyle("paddingTop", 5);
-				vb.addChild(label);
-				//vb.addChild(textInput);
-				
-				vb.addChild(dropDown);
-				vb.addChild(b1);
-				vb.addChild(b2);
-				
-				panel = new Panel();
-				panel.title = "Choose your viewer/broadcaster role";
-				panel.width = 240;
-				panel.height = 180;
-				panel.addChild(vb);
-				panel.addChild(cb);
-				//createPopUp();
+			public function initPop(btn:Button, slott:String):void {
+				if(btn.label !="Leave Slot"){
+					picked = slott;
+					
+					var vb:VBox = new VBox();
+					var label:Label = new Label();
+					//var textInput:TextInput = new TextInput();
+					
+					var cb:ControlBar = new ControlBar();
+					var s:Spacer = new Spacer();
+					var b1:Button = new Button();
+					var b2:Button = new Button();
+					tempButton = btn;
+					tempSlott = slott;
+					
+					s.percentWidth = 100;
+					
+					b1.label = "OK";
+					b1.addEventListener(MouseEvent.CLICK, signIn);
+					//b1.addEventListener(MouseEvent.CLICK, subscribe1);
+					b2.label = "Cancel";
+					b2.addEventListener(MouseEvent.CLICK, closePopUp);
+					
+					//cb.addChild(s);
+					//cb.addChild(b1);
+					//cb.addChild(b2);
+					
+					label.text = "This is how you'll appear in the chat";
+					//slots();
+					//dropDown.dataProvider = userChoices;
+					//dropDown.labelField = "ddlLabel";
+					vb.setStyle("paddingBottom", 5);
+					vb.setStyle("paddingLeft", 5);
+					vb.setStyle("paddingRight", 5);
+					vb.setStyle("paddingTop", 5);
+					vb.addChild(label);
+					vb.addChild(textInput);
+					
+					//vb.addChild(dropDown);
+					vb.addChild(b1);
+					vb.addChild(b2);
+					
+					panel = new Panel();
+					panel.title = "Type in your name";
+					panel.width = 240;
+					panel.height = 180;
+					panel.addChild(vb);
+					panel.addChild(cb);
+					//createPopUp();
+					PopUpManager.addPopUp(panel, this, true);
+					PopUpManager.centerPopUp(panel);
+				}else{
+					unPublish(slott);
+				}
 			}
 			
 			private function closePopUp(evt:MouseEvent):void {
@@ -113,59 +111,76 @@
 			}
 			
 			private function createPopUp(evt:Event):void {
-				initPop();
+				//initPop();
 				PopUpManager.addPopUp(panel, this, true);
 				PopUpManager.centerPopUp(panel);
 			}
-			private function chooseRole(evt:MouseEvent):void{
-				picked = dropDown.selectedItem.slot as String;
-				
-				mainInit(picked);
+			private function chooseRole(evt:Event):void{
+				//picked = dropDown.selectedItem.slot as String;
+				startDB();
+				//activeSlots();
+				mainInit('Listener');
 				
 				
 				//timr = new Timer(1000);
-				timr.addEventListener(TimerEvent.TIMER, checkSub);
-				timr.start();
+				//timr.addEventListener(TimerEvent.TIMER, checkSub);
+				//timr.start();
 				connectQuery();
 				
 				//Alert.show('just did doconnect');
-				PopUpManager.removePopUp(panel);
+				//PopUpManager.removePopUp(panel);
 				//Alert.show('REMOVE POPUP ' + picked);
 				//Alert.show(picked);
 			}
 			public function connectQuery():void{
-				
 				doConnect2();
-				takeSlot();
-				//publish2();
-				//activeSlots();
 				
-				//prompt2.text = arrayCollectionToString(inUse);
 				
-				//Alert.show('queryd');
+				subscribeAll(inUse,picked);
+				timr.addEventListener(TimerEvent.TIMER, checkSub);
+				timr.start();
+				//takeSlot();
+				
 			}
 			
-			public function arrayCollectionToString( arr:ArrayCollection ):String
-			{
-				//trace('arraycollect got calld');
-				var toRet:String = "[";
-				for each( var obj:Object in arr ) {
-					//toRet += obj.toString() + ", ";
-					//toRet += obj.slot as String;
-					toRet += "ob ";
+			public function takeIt(btn:Button, slott:String):void{
+				if(btn.label !="Leave Slot"){
+					picked = slott;
+					takeSlot();
+					publish2(slott);
+					doSubscribe1.visible = false;
+					doSubscribe2.visible = false;
+					doSubscribe3.visible = false;
+					doSubscribe4.visible = false;
+					btn.label = "Leave Slot";
+					btn.visible = true;
+				}else{
+					unPublish(slott);
 				}
-				toRet += "]";
-				return toRet;
 			}
+			
+			
 			
 			public function checkSub(event:TimerEvent):void {
 				activeSlots();
+				startDB();
 				timeLapse += 1;
+				if(timeLapse < 3){
+					return;}
 				//trace('TIME:'+timeLapse);
 				//t1.text = timeToString(timeLapse);
 				//subscribeAll();
 				
-				subscribeAll(inUse);
+				subscribeAll(inUse,picked);
+				//if(loadin && scrubbed && dbCheck !=null){
+				if(loadin){
+					if(dbCheck != null){
+					loadingLabel.visible=false;
+					vidScreen2.visible =true;
+					loadin = false;
+					}
+				}
+				
 				
 			}
 			
@@ -215,50 +230,91 @@
 	
 	<fx:Style source="MVP.css"/>
 	<s:BorderContainer id="vidScreen2" x="10" y="10" width="850" height="200"
-					   backgroundColor="#EEEEEE">
+					   backgroundColor="#EEEEEE" visible="false" >
 		<s:BorderContainer width="180" height="120" x="14" y="7" id="bContainer1"   >
 			<mx:UIComponent width="180" height="120" x="0" y="0" id="videoRemoteContainer1"   />
-			<mx:Label width="143" height="93" x="14" y="7" id="available1" text="this slot available" visible="true"/>
+			<s:Label width="143" height="93" x="14" y="7" id="available1" text="this slot available" visible="true"/>
+			<s:Rect id="meter1" x="0" y="90" width="10%" height="80%" visible="false">                              
+				<s:stroke>
+					<s:SolidColorStroke color="0x000000" weight="1"/>
+				</s:stroke>
+				<s:fill>
+					<s:SolidColor color="red" alpha="1"/>
+				</s:fill>
+				
+			</s:Rect>
 		</s:BorderContainer>
 		
 		<s:BorderContainer width="180" height="120" x="214" y="7" id="bContainer2"   >
 			<mx:UIComponent width="180" height="120" x="0" y="0" id="videoRemoteContainer2"/>
-			<mx:Label width="140" height="80" x="14" y="7" id="available2" text="this slot available" visible="true"/>
+			<s:Label width="140" height="80" x="14" y="7" id="available2" text="this slot available" visible="true"/>
+			<s:Rect id="meter2" x="0" y="90" width="10%" height="80%" visible="false">                              
+				<s:stroke>
+					<s:SolidColorStroke color="0x000000" weight="1"/>
+				</s:stroke>
+				<s:fill>
+					<s:SolidColor color="red" alpha="1"/>
+				</s:fill>
+				
+			</s:Rect>
+
 		</s:BorderContainer>
 		
 		<s:BorderContainer width="180" height="120" x="414" y="7" id="bContainer3"   >	
 			<mx:UIComponent width="180" height="120" x="0" y="0" id="videoRemoteContainer3"/>
-			<mx:Label width="180" height="120" x="14" y="7" id="available3" text="this slot available" visible="true"/>
+			<s:Label width="180" height="75" x="14" y="7" id="available3" text="this slot available" visible="true" />
+			<s:Rect id="meter3" visible="false" x="0" y="90" width="10%" height="70%">                              
+				<s:stroke>
+					<s:SolidColorStroke color="0x000000" weight="1"/>
+				</s:stroke>
+				<s:fill>
+					<s:SolidColor color="red" alpha="1"/>
+				</s:fill>
+				
+			</s:Rect>
+
 		</s:BorderContainer>
 		
 		<s:BorderContainer width="180" height="120" x="614" y="7" id="bContainer4"   >
 			<mx:UIComponent width="180" height="120" x="0" y="0" id="videoRemoteContainer4"/>
-			<mx:Label width="180" height="120" x="14" y="7" id="available4" text="this slot available" visible="true"/>
+			<s:Label width="180" height="75" x="14" y="7" id="available4" text="this slot available" visible="true"/>
+			<s:Rect id="meter4" x="0" y="90" width="10%" height="80%" visible="false">                              
+				<s:stroke>
+					<s:SolidColorStroke color="0x000000" weight="1"/>
+				</s:stroke>
+				<s:fill>
+					<s:SolidColor color="red" alpha="1"/>
+				</s:fill>
+				
+			</s:Rect>
+
 		</s:BorderContainer>
+		<s:Button label="Take Slot 1" id="doSubscribe1" x="67" y="146" visible="true" click="initPop(doSubscribe1,'A1')"/>
+		<s:Button label="Take Slot 2" id="doSubscribe2" x="264" y="146" visible="true" click="initPop(doSubscribe2,'A2')"/>
+		<s:Button label="Take Slot 3" id="doSubscribe3" x="463" y="146" visible="true" click="initPop(doSubscribe3,'A3')"/>
+		<s:Button label="Take Slot 4" id="doSubscribe4" x="662" y="146" visible="true" click="initPop(doSubscribe4,'A4')"/>
 	</s:BorderContainer>	
-	<mx:TextInput id="subscribeName2" x="210" y="150" width="85" visible="false" />
-	<mx:Button label="Play" id="doSubscribe2" x="303" y="150" visible="false"/>
-	<mx:Button label="Play" id="doSubscribe1" x="2" y="2" visible="false"/>
-	<mx:Button label="Play" id="doSubscribe4" x="712" y="149" visible="false"/>
-	<mx:TextInput id="subscribeName1" x="26" y="150" width="85" visible="false"/>
-	<mx:Button id="startTalking" x="26" y="170" width="85" label="Connect" visible="false"/>
-	<!-- <mx:Label id="t1" x="26" y="230" width="85" text="duh"/> -->
-	<mx:TextInput id="publishName" x="26" y="150" width="85" visible="false"/>
-	<mx:Button label="Publish" id="doPublish" x="120" y="150" visible="false"  />
-	<mx:TextInput id="subscribeName4" x="619" y="149" width="85" visible="false"/>
+	<s:TextInput id="subscribeName2" x="210" y="150" width="85" visible="false" />
+	<s:TextInput id="subscribeName1" x="26" y="150" width="85" visible="false"/>
+	<s:Button id="startTalking" x="26" y="170" width="85" label="Connect" visible="false"/>
+	<!-- <s:Label id="t1" x="26" y="230" width="85" text="duh"/> -->
+	<s:TextInput id="publishName" x="26" y="150" width="85" visible="false"/>
+	<s:Button label="Publish" id="doPublish" x="120" y="150" visible="false"  />
+	<s:TextInput id="subscribeName4" x="619" y="149" width="85" visible="false"/>
 	<mx:HBox x="120" y="240" horizontalGap="0"  visible="false"> 
-		<mx:TextInput id="connectStr" width="266" visible="false"/>
+		<s:TextInput id="connectStr" width="266" visible="false"/>
 		<mx:Spacer width="4"/>
-		<mx:Button label="Connect" id="connectButton" visible="false"/>
+		<s:Button label="Connect" id="connectButton" visible="false"/>
 	</mx:HBox>
 	<mx:Text id="playerVersion" x="120" y="264" width="172" color="#747474" fontSize="10" visible="false" />
 	<mx:Text id="fpsText" x="6" y="304" width="85" visible="false"/>
 	<mx:Text id="bufferLenText" x="456" y="304" width="85" visible="false"/>
 	<mx:Text id="prompt" x="101" y="295" width="347" height="30" visible="false"/>
 	<mx:Text id="prompt2" x="101" y="275" width="347" height="30" visible="false"/>
-	<mx:TextInput id="subscribeName3" x="421" y="149" width="85" visible="false"/>
-	<mx:Button label="Play" id="doSubscribe3" x="514" y="149" visible="false"/>
+	<s:TextInput id="subscribeName3" x="421" y="149" width="85" visible="false" />
 	<s:List id="activeList" x="516" y="185" visible="false"></s:List>
+	<s:Label id="loadingLabel" x="303" y="119" width="151" height="43" backgroundColor="#38A2CE"
+			 fontSize="20" text="Application Loading;"/>
 	
 	
 	

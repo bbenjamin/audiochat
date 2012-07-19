@@ -34,32 +34,51 @@ private function switchstring(st:String):int{
 		case "A4":
 			inttt = 4;
 			break;
+		case "Listener":
+			inttt=5;
 		default:
 			inttt = -1;
 			break;
 	}	
 	return inttt;	
 }
+private function startDB():void{
+	mysqlQuery("SELECT * FROM slots" ,"startDB");
+	//mysqlQuery("UPDATE slots SET active=1 WHERE slot='Listener'","startDB");
+}
+private function signIn(name:String):void{
+	if(textInput.text !=null){
+		name = textInput.text;
+	}else{
+		name = "Anonymous Coward";
+	}
+	
+	//Alert.show(name);
+	mysqlQuery("UPDATE slots SET username='"+name+"',active=1 WHERE slot='" + picked + "'"  ,"signIn");
+}
+private function slotName():void{
+	mysqlQuery("SELECT id,slot,username FROM slots ","slotName");
+}
 
 private function slots():void{
 	mysqlQuery("SELECT slot FROM slots WHERE active=0","slots");
 }
 private function activeSlots():void{
-	//mysqlQuery("SELECT slot FROM slots WHERE active=1 AND slot LIKE 'S%'","activeSlots");
-	mysqlQuery("SELECT slot FROM slots WHERE active=1","activeSlots");
+	mysqlQuery("SELECT slot, username FROM slots WHERE active=1","activeSlots");
+	//mysqlQuery("SELECT slot FROM slots WHERE active=1","activeSlots");
 }
 private function takeSlot():void{
 	//var qur:String = "UPDATE slots SET active=1 WHERE slot='"+picked+"'";
 	var idd:int;
 	idd = switchstring(picked);
-	if(picked == 'Listener'){
-		return;
-	}
-	else{
+	//if(picked == 'Listener'){
+	//	return;
+	//}
+	//else{
 		var qur:String = "UPDATE slots SET active=1 WHERE slot='" + picked + "'";
 		//trace(qur);
 		mysqlQuery(qur,"takeslot");
-	}
+	//}
 	/*
 	if (idd >= 0){
 	var qur:String = "UPDATE slots SET active=1 WHERE id="+idd;
@@ -73,10 +92,12 @@ private function takeSlot():void{
 public function leaveSlot(sl:String):void{
 	var idd:int;
 	idd = switchstring(picked);
+	
 	if (idd >= 0){
 		//var qur:String = "UPDATE slots SET active=0 WHERE id="+idd;
 		//mysqlQuery(qur,"leaveslot");
 	}
+	
 }
 
 /*	
