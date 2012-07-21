@@ -3,9 +3,10 @@
 	xmlns:mx="library://ns.adobe.com/flex/mx"
 	xmlns:fx="http://ns.adobe.com/mxml/2009" 
 	xmlns:s="library://ns.adobe.com/flex/spark" 
+	xmlns:txt="text.*"
 	layout="absolute"
 	xmlns:local="*"
-	height="340" width="900"
+	height="750" width="900"
 	backgroundColor="gray"
 	backgroundAlpha="0"
 	creationComplete="chooseRole(event);activeSlots();"
@@ -177,6 +178,7 @@
 					if(dbCheck != null){
 					loadingLabel.visible=false;
 					vidScreen2.visible =true;
+					textWindow.visible = true;
 					loadin = false;
 					}
 				}
@@ -229,11 +231,33 @@
 	</fx:Script>
 	
 	<fx:Style source="MVP.css"/>
-	<s:BorderContainer id="vidScreen2" x="10" y="10" width="850" height="200"
-					   backgroundColor="#EEEEEE" visible="false" >
-		<s:BorderContainer width="180" height="120" x="14" y="7" id="bContainer1"   >
+	<s:BorderContainer id="wholApp" x="0" y="-16" width="892" height="550" dropShadowVisible="true">
+		<s:backgroundFill>	
+			<s:LinearGradient rotation="90">
+				<s:GradientEntry color="#CCCCCC"/>
+				<s:GradientEntry color="#999999"/>
+			</s:LinearGradient>
+		</s:backgroundFill>
+	</s:BorderContainer>
+	<s:BorderContainer id="vidScreen2" x="10" y="10" width="880" height="200"
+					    visible="false" borderColor="black" borderWeight="8" dropShadowVisible="true" >
+		<s:backgroundFill>	
+			<s:LinearGradient rotation="90">
+				<s:GradientEntry color="#CCCCCC"/>
+				<s:GradientEntry color="#999999"/>
+			</s:LinearGradient>
+		</s:backgroundFill>
+		<s:BorderContainer width="180" height="120" x="14" y="7" id="bContainer1" dropShadowVisible="true"  >
+			
+			<s:backgroundFill>	
+				<s:LinearGradient rotation="180">
+					<s:GradientEntry color="#C2D6D6"/>
+					<s:GradientEntry color="#F0F5F5"/>
+				</s:LinearGradient>
+			</s:backgroundFill>
 			<mx:UIComponent width="180" height="120" x="0" y="0" id="videoRemoteContainer1"   />
 			<s:Label width="143" height="93" x="14" y="7" id="available1" text="this slot available" visible="true"/>
+			
 			<s:Rect id="meter1" x="0" y="90" width="10%" height="80%" visible="false">                              
 				<s:stroke>
 					<s:SolidColorStroke color="0x000000" weight="1"/>
@@ -245,7 +269,13 @@
 			</s:Rect>
 		</s:BorderContainer>
 		
-		<s:BorderContainer width="180" height="120" x="214" y="7" id="bContainer2"   >
+		<s:BorderContainer width="180" height="120" x="214" y="7" id="bContainer2" dropShadowVisible="true"  >
+			<s:backgroundFill>	
+				<s:LinearGradient rotation="180">
+					<s:GradientEntry color="#C2D6D6"/>
+					<s:GradientEntry color="#F0F5F5"/>
+				</s:LinearGradient>
+			</s:backgroundFill>
 			<mx:UIComponent width="180" height="120" x="0" y="0" id="videoRemoteContainer2"/>
 			<s:Label width="140" height="80" x="14" y="7" id="available2" text="this slot available" visible="true"/>
 			<s:Rect id="meter2" x="0" y="90" width="10%" height="80%" visible="false">                              
@@ -260,7 +290,13 @@
 
 		</s:BorderContainer>
 		
-		<s:BorderContainer width="180" height="120" x="414" y="7" id="bContainer3"   >	
+		<s:BorderContainer width="180" height="120" x="414" y="7" id="bContainer3" dropShadowVisible="true"  >	
+			<s:backgroundFill>	
+				<s:LinearGradient rotation="180">
+					<s:GradientEntry color="#C2D6D6"/>
+					<s:GradientEntry color="#F0F5F5"/>
+				</s:LinearGradient>
+			</s:backgroundFill>
 			<mx:UIComponent width="180" height="120" x="0" y="0" id="videoRemoteContainer3"/>
 			<s:Label width="180" height="75" x="14" y="7" id="available3" text="this slot available" visible="true" />
 			<s:Rect id="meter3" visible="false" x="0" y="90" width="10%" height="70%">                              
@@ -275,7 +311,13 @@
 
 		</s:BorderContainer>
 		
-		<s:BorderContainer width="180" height="120" x="614" y="7" id="bContainer4"   >
+		<s:BorderContainer width="180" height="120" x="614" y="7" id="bContainer4" dropShadowVisible="true"  >
+			<s:backgroundFill>	
+				<s:LinearGradient rotation="180">
+					<s:GradientEntry color="#C2D6D6"/>
+					<s:GradientEntry color="#F0F5F5"/>
+				</s:LinearGradient>
+			</s:backgroundFill>
 			<mx:UIComponent width="180" height="120" x="0" y="0" id="videoRemoteContainer4"/>
 			<s:Label width="180" height="75" x="14" y="7" id="available4" text="this slot available" visible="true"/>
 			<s:Rect id="meter4" x="0" y="90" width="10%" height="80%" visible="false">                              
@@ -317,5 +359,7 @@
 			 fontSize="20" text="Application Loading;"/>
 	
 	
+	<txt:txtcht id="textWindow" x="10" y="218" width="880" visible="false"  />
 	
 </local:ChatController>
+

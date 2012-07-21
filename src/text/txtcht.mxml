@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:local="*"
+		 x="-20" y="28" width="880" height="284" contentBackgroundColor="#F9FBFB"
+		 creationComplete="init();dConnect();">
+	
+	<fx:Script>
+		<![CDATA[
+			import flashx.textLayout.conversion.TextConverter;
+			import flashx.textLayout.elements.ParagraphElement;
+			import flashx.textLayout.elements.SpanElement;
+			import flashx.textLayout.elements.TextFlow;
+			// server: module:ModuleTextChat.java. Application:TextChat, streamtype:chat		
+			private var nec:NetConnection = null;
+			private var textchat_so:SharedObject = null;
+			private var lastChatId:Number = 0;
+			[Bindable]
+			private var chatFlow:TextFlow;
+			
+			
+			
+			[Bindable]
+			private var chatSharedObjectName:String = "textchat";
+			
+			[Bindable]
+			private var chatText:String = "";
+			
+			[Bindable]
+			private var isConnectad:Boolean = false;
+			
+			private var p:ParagraphElement;
+			private var sp:SpanElement;
+			private var sp2:SpanElement;
+			//NetConnection.defaultObjectEncoding = ObjectEncoding.AMF0; // version 1.3.3 
+			//SharedObject.defaultObjectEncoding = ObjectEncoding.AMF0;
+			
+			private function init():void
+			{
+				txtUser.text = "Anonymous Coward"; 
+				txtMessage.text = "[enter message here]";
+				
+				//connectStr.text = "rtmp://ec2-23-21-77-1.compute-1.amazonaws.com/textchat";
+				connectStr.text = "rtmp://23.21.77.1/textchat";
+				//soNameStr.text = chatSharedObjectName;
+				chatFlow = new TextFlow();
+			}
+			
+			private function netStatusHandler(event:NetStatusEvent):void
+			{
+				//trace("ncOde: "+event.info.code+" ("+event.info.code+")");
+				
+				if (event.info.code == "NetConnection.Connect.Success")
+				{
+					initSharedObject(chatSharedObjectName);
+				}
+				else if (event.info.code == "NetConnection.Connect.Failed"){
+					//trace( "Connection failed: textchat");
+				}
+					
+				else if (event.info.code == "NetConnection.Connect.Rejected"){
+					//trace( event.info.description);
+				}
+					
+				
+			}
+			private function dConnect():void
+			{
+				if (connectButton.label == "Connect")
+				{
+					// create a connection to the wowza media server
+					nec = new NetConnection();
+					nec.objectEncoding = ObjectEncoding.AMF0;
+					nec.addEventListener(NetStatusEvent.NET_STATUS,netStatusHandler);
+					
+					//trace("connect: "+ connectStr.text);
+					chatSharedObjectName =  "textchat";
+					nec.connect(connectStr.text);
+					
+					connectButton.label = "Stop";
+				}
+				else
+				{
+					nec = null;
+					textchat_so = null;
+					listChat.text = "";
+					//chatText = "";
+					chatFlow = null;
+					lastChatId = 0;
+					
+					isConnectad=false;
+					connectButton.label = "Connect";
+				}
+			}
+			
+			// format the text chat messages
+			private function formatMessage(chatData:Object):String
+			{
+				var msg:String;
+				var currTime:Date = chatData.time;
+				
+				var hour24:Number = currTime.getHours();
+				var ampm:String = (hour24<12) ? "AM" : "PM";
+				var hourNum:Number = hour24%12;
+				if (hourNum == 0)
+					hourNum = 12;
+				
+				var hourStr:String = hourNum+"";
+				var minuteStr:String = (currTime.getMinutes())+"";
+				if (minuteStr.length < 2)
+					minuteStr = "0"+minuteStr;
+				var secondStr:String = (currTime.getSeconds())+"";
+				if (secondStr.length < 2)
+					secondStr = "0"+secondStr;
+				
+			//	msg = "<u>"+hourStr+":"+minuteStr+":"+secondStr+ampm+"</u> - <b>"+chatData.user+"</b>: "+chatData.message;
+				msg = "<b>"+chatData.user+"</b>: "+chatData.message;
+				return msg;
+			}
+			private function synchHandler(event:SyncEvent):void
+			{
+				//trace('textchat_so.data["lastChatId"]', textchat_so.data["lastChatId"]);
+				if (lastChatId == 0)
+				{
+					lastChatId = Number(textchat_so.data["lastChatId"]) - 4;
+					if (lastChatId < 0)
+						lastChatId = 0;
+				}
+				
+				// show new messasges
+				var currChatId:Number = Number(textchat_so.data["lastChatId"]);
+				
+				// if there are new messages to display
+				if (currChatId > 0)
+				{
+					var i:Number;
+					for(i=(lastChatId+1);i<=currChatId;i++)
+					{
+						if (textchat_so.data["chatData"+i] != undefined)
+						{
+							var chatMessage:Object = textchat_so.data["chatData"+i];				
+							var msg:String = formatMessage(chatMessage);
+							//trace("recvMessage: "+msg);
+							sp = new SpanElement();
+							sp2 = new SpanElement();
+							p = new ParagraphElement();
+							//chatText = "<p>" + msg + "</p>" + chatText;
+							// msg = "<b>"+chatData.user+"</b>: "+chatData.message;
+							sp.text = chatMessage.user +': ';
+							sp.setStyle("fontWeight","bold" );
+							sp2.text = chatMessage.message;
+							p.addChild(sp);
+							p.addChild(sp2);
+							chatFlow.addChildAt(0,p);
+							
+							
+							
+							//chatFlow = TextConverter.importToFlow(chatText, TextConverter.TEXT_FIELD_HTML_FORMAT);
+							
+							//chatText. = "<p>" + msg + "</p>" + chatText;
+						}
+					}
+					lastChatId = currChatId;
+				}
+			}
+			private function connectSharedObject(soName:String):void
+			{
+				//trace('soName ' + soName);
+				if (nec==null) return;
+				//trace ('made it through');
+				isConnectad = true;
+				textchat_so = SharedObject.getRemote(soName, nec.uri);
+				
+				// add new message to the chat box as they come in	
+				textchat_so.addEventListener(SyncEvent.SYNC, synchHandler);
+				
+				textchat_so.connect(nec);	
+			}
+			
+			private var responder:Responder = new Responder(responseResult,responseFault); 
+			private function responseResult(result:Object):void
+				
+			{
+				//trace('rad');
+				//trace('response result' + result.toString());
+				connectSharedObject("textchat");
+			}
+			private function responseFault(fault:Object):void
+			{
+				//trace('borked');
+				//trace('fault response ' +fault.toString());
+			}
+			
+			private function initSharedObject(soName:String):void
+			{
+				// initialize the shared object server side
+				//trace('went into init share object');
+				if (nec==null) return;
+				//trace('soName ' + soName);
+				
+				nec.call("initSharedObject", responder, soName);
+			}
+			
+			public function onMetaData(info:Object):void
+			{
+				//trace("onMetaData");
+			}
+			
+			// Add new messages to the chat box by calling the server side function sendMessage
+			// Additional properties can be added to the chatMessage object if needed.
+			// They will be passed through the system to the shared object by the server
+			private function addMessage():void
+			{
+				var chatMessage:Object = new Object();
+				
+				chatMessage.message = txtMessage.text;
+				chatMessage.time = new Date();
+				chatMessage.user = txtUser.text;
+				
+				//trace("Add Message: "+formatMessage(chatMessage));
+				nec.call("addMessage", null, chatSharedObjectName, chatMessage);
+			}
+			
+			
+			
+			protected function txtMessage_clickHandler(event:MouseEvent):void
+			{
+				event.stopPropagation();
+				txtMessage.text ="";
+				
+			}
+			
+			protected function txtUser_clickHandler(event:MouseEvent):void
+			{
+				event.stopPropagation();
+				txtUser.text ="";
+				
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:BorderContainer x="0" y="0" width="100%" height="296" borderColor="black" borderWeight="8"
+					   dropShadowVisible="true">
+		<s:backgroundFill>
+			
+			<s:LinearGradient rotation="90">
+				<s:GradientEntry color="#CCCCCC"/>
+				<s:GradientEntry color="#999999"/>
+			</s:LinearGradient>
+		</s:backgroundFill>
+		<s:TextArea id="listChat" x="14" y="28" width="422" height="245" borderColor="#ABA4A4"
+					contentBackgroundColor="#F1EEEE" enabled="{isConnectad}" textFlow="{chatFlow}"    />
+		<s:Label x="14" y="1" width="676" height="24" fontSize="20" paddingLeft="3" paddingTop="3"
+				 text="COMMENT SECTION"/>
+		<s:BorderContainer x="0" y="0" width="864" height="25" backgroundAlpha="0.26"
+						   backgroundColor="#4F4040">
+		</s:BorderContainer>
+	</s:BorderContainer >
+	<s:Button id="connectButton" label ="Connect" click="dConnect()" x="9" y="271" visible="false"/>
+	
+	<!--<s:TextArea id="listChat" x="10" y="34" width="739" height="103"
+				contentBackgroundColor="#BEBEBE" enabled="{isConnectad}" text="{chatText}"  /> -->
+	
+	<s:TextInput id="connectStr" y="211" x="9" visible="false"/>
+	<!--<s:TextInput id="soNameStr" y="367" x="10" text="{chatSharedObjectName}" visible="false" />-->
+	<s:BorderContainer id="sendBox" x="468" y="38" width="374" height="138" backgroundColor="#BABAB1"
+					   dropShadowVisible="true">
+		<s:Label y="8" width="174" height="19" fontSize="13" fontWeight="bold" text="Leave A Comment"
+				 textAlign="center" verticalAlign="middle"/>
+		<s:TextArea id="txtMessage" x="10" y="35" width="352" height="54"
+					click="txtMessage_clickHandler(event)" enabled="{isConnectad}" borderColor="black" borderVisible="true"/>
+		
+		<s:TextInput id="txtUser" x="117" y="103" click="txtUser_clickHandler(event)"
+					 enabled="{isConnectad}" text="Anonymous Coward"/>
+		<s:Label x="0" y="100" width="105" height="25" text="Enter Your Name:&#xd;"
+				 verticalAlign="middle"/>
+		<s:Button id="butSend" x="268" y="104" label="send" click="addMessage()"
+				  enabled="{isConnectad}"/>
+		
+	
+	</s:BorderContainer> 
+	
+	
+</s:Group>
+

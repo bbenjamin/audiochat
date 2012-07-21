@@ -21,5 +21,10 @@
 			<type>2</type>
 			<location>/Applications/MAMP/htdocs/AMAZON EC2/mvpaudio</location>
 		</link>
+		<link>
+			<name>bin-release1</name>
+			<type>2</type>
+			<location>/Applications/MAMP/htdocs/AMAZON EC2/audiotext</location>
+		</link>
 	</linkedResources>
 </projectDescription>

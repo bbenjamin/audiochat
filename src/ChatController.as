@@ -33,9 +33,10 @@ package
 	import spark.components.Button;
 	import spark.components.Group;
 	import spark.components.Label;
+	import spark.components.SkinnableContainer;
 	import spark.components.TextInput;
 	import spark.primitives.Rect;
-	
+	import spark.components.BorderContainer;
 	//import spark.components.Label;
 	
 	//include "ActionScript/main.as";
@@ -45,6 +46,7 @@ package
 	public class ChatController extends Application
 	{
 		//Security.LOCAL_TRUSTED;
+		public var wholApp:BorderContainer;
 		public var mike:Boolean = false; 
 		public var scrubbed:Boolean =false;	
 		private var nc:NetConnection = null;
